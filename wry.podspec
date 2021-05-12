@@ -33,7 +33,9 @@ Pod::Spec.new do |s|
   # }
   # s.libraries  = 'iconv', 'c++'
 
-  s.resources = 'src/**/*', 'Cargo.toml', 'Cargo.lock'
+  # This might be more of a tao concern, but we'll see
+  s.frameworks = 'WebKit'
+  s.resources = 'src/**/*', 'Cargo.toml', 'Cargo.lock', 'build.rs', 'rustfmt.toml'
   # While this won't exclude the (yellow) folder groups, it will exclude the (blue) folder references.
   s.exclude_files = 'src/**/linux', 'src/**/win32', 'src/**/winrt'
 
