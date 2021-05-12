@@ -64,8 +64,8 @@ Pod::Spec.new do |s|
   # for other file attributes of the specification are collected.
   # See: https://github.com/Geal/rust_on_mobile/blob/master/InRustWeTrustKit.podspec
   s.prepare_command = <<-CMD
-    BASEPATH="${PWD}"
-    echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
+BASEPATH="${PWD}"
+echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   CMD
 
   # Luckily exactly the same script is used for both iOS and macOS, but if we ever need to make them distinct,
@@ -75,11 +75,11 @@ Pod::Spec.new do |s|
       :name => 'Build',
       :input_file_lists => ['$(PODS_TARGET_SRCROOT)/wry-inputs.xcfilelist'],
       :script => <<-CMD
-        echo "This is the build phase for the wry pod. HOME: ${HOME}"
-        # cargo build
+echo "This is the build phase for the wry pod. HOME: ${HOME}"
+# cargo build
 
-        cd $(SRCROOT)/..
-        ${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+cd $(SRCROOT)/..
+${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
       CMD
     },
   ]
