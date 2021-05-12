@@ -79,13 +79,13 @@ echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   s.script_phases = [
     {
       :name => 'Build',
-      # :input_file_lists => ['$(PODS_ROOT)/wry-inputs.xcfilelist'],
+      # :input_file_lists => ['$(PODS_TARGET_SRCROOT)/wry-inputs.xcfilelist'],
       :input_files => inputFiles,
       :script => <<-CMD
-echo "This is the build phase for the wry pod. HOME: ${HOME}"
-# cargo build
+echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}"
 
-cd $(SRCROOT)/..
+cd "${SRCROOT}/.."
+
 ${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
       CMD
     },
