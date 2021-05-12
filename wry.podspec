@@ -8,17 +8,23 @@
 xcfilelistName = 'wry-inputs.xcfilelist'
 resourcesBesidesSrc = [xcfilelistName, 'Cargo.toml', 'Cargo.lock', 'build.rs', 'rustfmt.toml']
 
+inputFiles = []
+
 # From: https://github.com/apollographql/apollo-ios/issues/636#issuecomment-542238208
 File.open(xcfilelistName, 'w') do |inputs|
   resourcesBesidesSrc.each do | path |
     if path != xcfilelistName
-      inputs.puts "$(PODS_TARGET_SRCROOT)/" + path
+      resolvedPath = "$(PODS_TARGET_SRCROOT)/" + path
+      inputs.puts resolvedPath
+      inputFiles.push(resolvedPath)
     end
   end
   Dir.glob("src/**/*").each do | path |
     pathObj = Pathname.new(path)
     if !pathObj.directory?
-      inputs.puts "$(PODS_TARGET_SRCROOT)/" + pathObj.relative_path_from("$(PODS_TARGET_SRCROOT)/..").to_s
+      resolvedPath = "$(PODS_TARGET_SRCROOT)/" + pathObj.relative_path_from("$(PODS_TARGET_SRCROOT)/..").to_s
+      inputs.puts resolvedPath
+      inputFiles.push(resolvedPath)
     end
   end
 end
@@ -73,7 +79,8 @@ echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   s.script_phases = [
     {
       :name => 'Build',
-      :input_file_lists => ['$(PODS_TARGET_SRCROOT)/wry-inputs.xcfilelist'],
+      # :input_file_lists => ['$(PODS_ROOT)/wry-inputs.xcfilelist'],
+      :input_files => inputFiles,
       :script => <<-CMD
 echo "This is the build phase for the wry pod. HOME: ${HOME}"
 # cargo build
