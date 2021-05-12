@@ -45,7 +45,8 @@ Pod::Spec.new do |s|
   # See: https://github.com/Geal/rust_on_mobile/blob/master/InRustWeTrustKit.podspec
   s.prepare_command = <<-CMD
     BASEPATH="${PWD}"
-    echo "This is the prepare_command for wry."
+    echo "This is the prepare_command for wry. pwd: ${BASEPATH}"
+    cargo build
   CMD
 
   s.info_plist = {
