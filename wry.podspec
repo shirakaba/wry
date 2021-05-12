@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   # s.summary      = cargo['package']['description']
   # s.authors      = cargo['package']['authors']
 
-  s.name         = wry
+  s.name         = 'wry'
   s.version      = '0.9.2'
   s.summary      = 'Cross-platform WebView rendering library'
   s.authors      = 'Tauri Programme within The Commons Conservancy'
