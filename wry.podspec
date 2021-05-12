@@ -10,7 +10,14 @@ resourcesBesidesSrc = [xcfilelistName, 'Cargo.toml', 'Cargo.lock', 'build.rs', '
 
 inputFiles = []
 
+# FIXME: Confirm that incremental build support is working. I'm having issues with understanding when the Cocoapods env vars
+#        get populated and where they're made available.
+# Looks like PODS_ROOT is: "${SRCROOT}/Pods" i.e. /Users/jamie/Documents/git/wry-ios-poc-new/gen/apple/Pods
+# Looks like PODS_TARGET_SRCROOT is: "${SRCROOT}/Pods/wry" i.e. /Users/jamie/Documents/git/wry-ios-poc-new/gen/apple/Pods/Target\ Support\ Files/wry
+# Neither of these are related to src/**/*.
+# It's found in Build Settings, in the User-Defined settings.
 # From: https://github.com/apollographql/apollo-ios/issues/636#issuecomment-542238208
+# The original comment may well have been using the wrong env var.
 File.open(xcfilelistName, 'w') do |inputs|
   resourcesBesidesSrc.each do | path |
     if path != xcfilelistName
@@ -74,15 +81,31 @@ BASEPATH="${PWD}"
 echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   CMD
 
-  # Luckily exactly the same script is used for both iOS and macOS, but if we ever need to make them distinct,
-  # we can change this to `s.ios.script_phases` and `s.osx.script_phases`.
-  s.script_phases = [
+  # For iOS, ARCHS returns "arm64 armv7". We want just "arm64" (because cargo-mobile doesn't support armv7 for iOS, and
+  # maybe in a related fashion because it's the intersection between ARCHS and VALID_ARCHS).
+  s.ios.script_phases = [
     {
       :name => 'Build',
-      # :input_file_lists => ['$(PODS_TARGET_SRCROOT)/wry-inputs.xcfilelist'],
-      :input_files => inputFiles,
+      # :input_file_lists => ['$(SRCROOT)/Target Support Files/' + s.name + '/' + xcfilelistName],
+      # :input_files => inputFiles,
       :script => <<-CMD
-echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}"
+echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
+
+cd "${SRCROOT}/.."
+
+${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --configuration ${CONFIGURATION:?} ${FORCE_COLOR} arm64
+      CMD
+    },
+  ]
+
+  # For macOS, ARCHS returns "arm64 x86_64". I haven't tried running this for macOS yet, so haven't seen whether this needs restricting.
+  s.osx.script_phases = [
+    {
+      :name => 'Build',
+      # :input_file_lists => ['$(SRCROOT)/Target Support Files/' + s.name + '/' + xcfilelistName],
+      # :input_files => inputFiles,
+      :script => <<-CMD
+echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
 
 cd "${SRCROOT}/.."
 
