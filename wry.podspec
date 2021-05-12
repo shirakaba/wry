@@ -4,8 +4,26 @@
 # See: https://github.com/jm/toml
 # cargo = TOML.load_file("Cargo.toml")
 
-Pod::Spec.new do |s|
+# Generate xcfilelists on pod install
+xcfilelistName = 'wry-inputs.xcfilelist'
+resourcesBesidesSrc = [xcfilelistName, 'Cargo.toml', 'Cargo.lock', 'build.rs', 'rustfmt.toml']
 
+# From: https://github.com/apollographql/apollo-ios/issues/636#issuecomment-542238208
+File.open(xcfilelistName, 'w') do |inputs|
+  resourcesBesidesSrc.each do | path |
+    if path != xcfilelistName
+      inputs.puts "$(PODS_TARGET_SRCROOT)/" + path
+    end
+  end
+  Dir.glob("src/**/*").each do | path |
+    pathObj = Pathname.new(path)
+    if !pathObj.directory?
+      inputs.puts "$(PODS_TARGET_SRCROOT)/" + pathObj.relative_path_from("$(PODS_TARGET_SRCROOT)/..").to_s
+    end
+  end
+end
+
+Pod::Spec.new do |s|
   # s.name         = cargo['package']['name']
   # s.version      = cargo['package']['version']
   # s.summary      = cargo['package']['description']
@@ -33,10 +51,12 @@ Pod::Spec.new do |s|
   # }
   # s.libraries  = 'iconv', 'c++'
 
-  # This might be more of a tao concern, but we'll see
+  # This might be more of a tao concern, but we'll see.
   s.frameworks = 'WebKit'
-  s.resources = 'src/**/*', 'Cargo.toml', 'Cargo.lock', 'build.rs', 'rustfmt.toml'
+  s.resources = ['src/**/*', *resourcesBesidesSrc]
+
   # While this won't exclude the (yellow) folder groups, it will exclude the (blue) folder references.
+  # If iOS and macOS needs ever diverge, we can change this to `s.ios.exclude_files` and `s.osx.exclude_files`.
   s.exclude_files = 'src/**/linux', 'src/**/win32', 'src/**/winrt'
 
   # A bash script that will be executed after the Pod is downloaded.
@@ -45,9 +65,24 @@ Pod::Spec.new do |s|
   # See: https://github.com/Geal/rust_on_mobile/blob/master/InRustWeTrustKit.podspec
   s.prepare_command = <<-CMD
     BASEPATH="${PWD}"
-    echo "This is the prepare_command for wry. pwd: ${BASEPATH}"
-    cargo build
+    echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   CMD
+
+  # Luckily exactly the same script is used for both iOS and macOS, but if we ever need to make them distinct,
+  # we can change this to `s.ios.script_phases` and `s.osx.script_phases`.
+  s.script_phases = [
+    {
+      :name => 'Build',
+      :input_file_lists => ['$(PODS_TARGET_SRCROOT)/wry-inputs.xcfilelist'],
+      :script => <<-CMD
+        echo "This is the build phase for the wry pod. HOME: ${HOME}"
+        # cargo build
+
+        cd $(SRCROOT)/..
+        ${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+      CMD
+    },
+  ]
 
   s.info_plist = {
     'Additional licenses' => 'MIT - See LICENSE-MIT',
