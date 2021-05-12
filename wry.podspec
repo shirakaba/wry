@@ -33,7 +33,8 @@ Pod::Spec.new do |s|
   # }
   # s.libraries  = 'iconv', 'c++'
 
-  s.resources = 'src/**/*'
+  s.resources = 'src/**/*', 'Cargo.toml', 'Cargo.lock'
+  # While this won't exclude the (yellow) folder groups, it will exclude the (blue) folder references.
   s.exclude_files = 'src/**/linux', 'src/**/win32', 'src/**/winrt'
 
   # A bash script that will be executed after the Pod is downloaded.
