@@ -4,34 +4,25 @@
 # See: https://github.com/jm/toml
 # cargo = TOML.load_file("Cargo.toml")
 
-# Generate xcfilelists on pod install
-xcfilelistName = 'wry-inputs.xcfilelist'
-resourcesBesidesSrc = [xcfilelistName, 'Cargo.toml', 'Cargo.lock', 'build.rs', 'rustfmt.toml']
+# The working directory of the Ruby code for this Pod will be PODS_TARGET_SRCROOT.
+resourcesBesidesSrc = ['Cargo.toml', 'Cargo.lock', 'build.rs', 'rustfmt.toml']
 
 inputFiles = []
 
-# FIXME: Confirm that incremental build support is working. I'm having issues with understanding when the Cocoapods env vars
-#        get populated and where they're made available.
+# The POD* variables are found in the Build Settings of both the Pods project and the main project, under the User-Defined settings.
 # Looks like PODS_ROOT is: "${SRCROOT}/Pods" i.e. /Users/jamie/Documents/git/wry-ios-poc-new/gen/apple/Pods
-# Looks like PODS_TARGET_SRCROOT is: "${SRCROOT}/Pods/wry" i.e. /Users/jamie/Documents/git/wry-ios-poc-new/gen/apple/Pods/Target\ Support\ Files/wry
-# Neither of these are related to src/**/*.
-# It's found in Build Settings, in the User-Defined settings.
+# Looks like PODS_TARGET_SRCROOT is: "${PODS_ROOT}/../../../../wry" i.e. /Users/jamie/Documents/git/wry
 # From: https://github.com/apollographql/apollo-ios/issues/636#issuecomment-542238208
-# The original comment may well have been using the wrong env var.
 File.open(xcfilelistName, 'w') do |inputs|
   resourcesBesidesSrc.each do | path |
     if path != xcfilelistName
-      resolvedPath = "$(PODS_TARGET_SRCROOT)/" + path
-      inputs.puts resolvedPath
-      inputFiles.push(resolvedPath)
+      inputFiles.push("$(PODS_TARGET_SRCROOT)/" + path)
     end
   end
   Dir.glob("src/**/*").each do | path |
     pathObj = Pathname.new(path)
     if !pathObj.directory?
-      resolvedPath = "$(PODS_TARGET_SRCROOT)/" + pathObj.relative_path_from("$(PODS_TARGET_SRCROOT)/..").to_s
-      inputs.puts resolvedPath
-      inputFiles.push(resolvedPath)
+      inputFiles.push("$(PODS_TARGET_SRCROOT)/" + pathObj.relative_path_from("$(PODS_TARGET_SRCROOT)/..").to_s)
     end
   end
 end
@@ -86,8 +77,9 @@ echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   s.ios.script_phases = [
     {
       :name => 'Build',
-      # :input_file_lists => ['$(SRCROOT)/Target Support Files/' + s.name + '/' + xcfilelistName],
-      # :input_files => inputFiles,
+      # I'm not sure output_files is appropriate for anything other than, say, if we wanted to generate a written report. If so, see:
+      #   https://faical.dev/articles/write-your-build-phase-scripts-in-swift.html
+      :input_files => inputFiles,
       :script => <<-CMD
 echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
 
@@ -102,8 +94,7 @@ ${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAM
   s.osx.script_phases = [
     {
       :name => 'Build',
-      # :input_file_lists => ['$(SRCROOT)/Target Support Files/' + s.name + '/' + xcfilelistName],
-      # :input_files => inputFiles,
+      :input_files => inputFiles,
       :script => <<-CMD
 echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
 
