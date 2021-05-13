@@ -13,17 +13,15 @@ inputFiles = []
 # Looks like PODS_ROOT is: "${SRCROOT}/Pods" i.e. /Users/jamie/Documents/git/wry-ios-poc-new/gen/apple/Pods
 # Looks like PODS_TARGET_SRCROOT is: "${PODS_ROOT}/../../../../wry" i.e. /Users/jamie/Documents/git/wry
 # From: https://github.com/apollographql/apollo-ios/issues/636#issuecomment-542238208
-File.open(xcfilelistName, 'w') do |inputs|
-  resourcesBesidesSrc.each do | path |
-    if path != xcfilelistName
-      inputFiles.push("$(PODS_TARGET_SRCROOT)/" + path)
-    end
+resourcesBesidesSrc.each do | path |
+  if path != xcfilelistName
+    inputFiles.push("$(PODS_TARGET_SRCROOT)/" + path)
   end
-  Dir.glob("src/**/*").each do | path |
-    pathObj = Pathname.new(path)
-    if !pathObj.directory?
-      inputFiles.push("$(PODS_TARGET_SRCROOT)/" + pathObj.relative_path_from("$(PODS_TARGET_SRCROOT)/..").to_s)
-    end
+end
+Dir.glob("src/**/*").each do | path |
+  pathObj = Pathname.new(path)
+  if !pathObj.directory?
+    inputFiles.push("$(PODS_TARGET_SRCROOT)/" + pathObj.relative_path_from("$(PODS_TARGET_SRCROOT)/..").to_s)
   end
 end
 
