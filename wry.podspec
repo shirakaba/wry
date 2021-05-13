@@ -77,9 +77,18 @@ echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   s.ios.script_phases = [
     {
       :name => 'Build',
-      # I'm not sure output_files is appropriate for anything other than, say, if we wanted to generate a written report. If so, see:
-      #   https://faical.dev/articles/write-your-build-phase-scripts-in-swift.html
       :input_files => inputFiles,
+      # If any output_files are missing, the script will be run again.
+      # I'm not sure it's possible to support looking for only the active architecture in output_files, sadly; we'll have to look for both.
+      #   https://github.com/Carthage/Carthage/commit/f622fafbec25ba3aaf7acbb1ddd1da2098cde8a6
+      # More info here:
+      #   https://faical.dev/articles/write-your-build-phase-scripts-in-swift.html
+      :output_files => [
+        # /Users/jamie/Documents/git/wry-ios-poc-new/target/aarch64-apple-ios/debug/libwry_ios.a
+        # /Users/jamie/Documents/git/wry-ios-poc-new/target/x86_64-apple-ios/debug/libwry_ios.a
+        '$(SRCROOT)/../../target/aarch64-apple-ios/$(CONFIGURATION)/libwry_ios.a',
+        '$(SRCROOT)/../../target/x86_64-apple-ios/$(CONFIGURATION)/libwry_ios.a'
+      ],
       :script => <<-CMD
 echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
 
@@ -95,6 +104,10 @@ ${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAM
     {
       :name => 'Build',
       :input_files => inputFiles,
+      :output_files => [
+        # /Users/jamie/Documents/git/wry-ios-poc-new/target/x86_64-apple-darwin/debug/libwry_ios.a
+        '$(SRCROOT)/../../target/x86_64-apple-darwin/$(CONFIGURATION)/libwry_ios.a'
+      ],
       :script => <<-CMD
 echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
 
