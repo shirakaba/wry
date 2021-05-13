@@ -14,9 +14,7 @@ inputFiles = []
 # Looks like PODS_TARGET_SRCROOT is: "${PODS_ROOT}/../../../../wry" i.e. /Users/jamie/Documents/git/wry
 # From: https://github.com/apollographql/apollo-ios/issues/636#issuecomment-542238208
 resourcesBesidesSrc.each do | path |
-  if path != xcfilelistName
-    inputFiles.push("$(PODS_TARGET_SRCROOT)/" + path)
-  end
+  inputFiles.push("$(PODS_TARGET_SRCROOT)/" + path)
 end
 Dir.glob("src/**/*").each do | path |
   pathObj = Pathname.new(path)
