@@ -85,12 +85,19 @@ echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
         '$(SRCROOT)/../../target/aarch64-apple-ios/$(CONFIGURATION)/libwry_ios.a',
         '$(SRCROOT)/../../target/x86_64-apple-ios/$(CONFIGURATION)/libwry_ios.a'
       ],
+      # I'm still working out the proper escaping for this.
+      # When it goes really wrong, we get:
+      #  xcode-script -v --platform iOS Simulator --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk --configuration Debug  x86_64
+      # This interprets "Simulator" as a terminal arg. So at the very least, platform needs to be quoted.
+      # But we also don't want to quote FORCE_COLOR, as then it interprets "" as a terminal arg.
+      # Last hurdle: "i386" isn't a known arch.
       :script => <<-CMD
 echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
+echo "Will run: \"${HOME}/.cargo/bin/cargo-apple\" xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}"
 
 cd "${SRCROOT}/.."
 
-${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --configuration ${CONFIGURATION:?} ${FORCE_COLOR} arm64
+"${HOME}/.cargo/bin/cargo-apple" xcode-script -v --platform "${PLATFORM_DISPLAY_NAME:?}" --sdk-root "${SDKROOT:?}" --configuration "${CONFIGURATION:?}" ${FORCE_COLOR} ${ARCHS:?}
       CMD
     },
   ]
@@ -106,10 +113,11 @@ ${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAM
       ],
       :script => <<-CMD
 echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
+echo "Will run: \"${HOME}/.cargo/bin/cargo-apple\" xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}"
 
 cd "${SRCROOT}/.."
 
-${HOME}/.cargo/bin/cargo-apple xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+"${HOME}/.cargo/bin/cargo-apple" xcode-script -v --platform "${PLATFORM_DISPLAY_NAME:?}" --sdk-root "${SDKROOT:?}" --configuration "${CONFIGURATION:?}" ${FORCE_COLOR} ${ARCHS:?}
       CMD
     },
   ]
