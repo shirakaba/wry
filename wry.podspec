@@ -55,6 +55,11 @@ Pod::Spec.new do |s|
   s.frameworks = 'WebKit'
   s.resources = ['src/**/*', *resourcesBesidesSrc]
 
+  # cargo-mobile doesn't distribute an i386 architecture, so here we prevent i386 being part of ARCHS for the `cargo-apple` command.
+  # https://github.com/CocoaPods/CocoaPods/issues/10077
+  # https://stackoverflow.com/questions/63607158/xcode-12-building-for-ios-simulator-but-linking-in-object-file-built-for-ios
+  s.pod_target_xcconfig = { 'EXCLUDED_ARCHS' => 'i386' }
+
   # While this won't exclude the (yellow) folder groups, it will exclude the (blue) folder references.
   # If iOS and macOS needs ever diverge, we can change this to `s.ios.exclude_files` and `s.osx.exclude_files`.
   s.exclude_files = 'src/**/linux', 'src/**/win32', 'src/**/winrt'
