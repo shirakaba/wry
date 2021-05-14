@@ -59,7 +59,22 @@ Pod::Spec.new do |s|
   # cargo-mobile doesn't distribute an i386 architecture, so here we prevent i386 being part of ARCHS for the `cargo-apple` command.
   # https://github.com/CocoaPods/CocoaPods/issues/10077
   # https://stackoverflow.com/questions/63607158/xcode-12-building-for-ios-simulator-but-linking-in-object-file-built-for-ios
-  s.pod_target_xcconfig = { 'EXCLUDED_ARCHS' => 'i386' }
+
+  common_xcconfig = {
+    :EXCLUDED_ARCHS => 'i386',
+  }
+
+  s.ios.pod_target_xcconfig = {
+    **common_xcconfig,
+    # 'LIBRARY_SEARCH_PATHS' => '$(inherited) "{{prefix-path "target/x86_64-apple-darwin/$(CONFIGURATION)"}}"'
+    # "/Users/jamie/Documents/git/wry-ios-poc-new/target/x86_64-apple-ios/$(CONFIGURATION)"
+    'LIBRARY_SEARCH_PATHS' => '$(inherited) $(SRCROOT)/../../target/aarch64-apple-ios/$(CONFIGURATION)',
+    'LIBRARY_SEARCH_PATHS' => '$(inherited) $(SRCROOT)/../../target/x86_64-apple-ios/$(CONFIGURATION)',
+  }
+  s.osx.pod_target_xcconfig = {
+    **common_xcconfig,
+    'LIBRARY_SEARCH_PATHS' => '$(inherited) $(SRCROOT)/../../target/x86_64-apple-darwin/$(CONFIGURATION)',
+  }
 
   # While this won't exclude the (yellow) folder groups, it will exclude the (blue) folder references.
   # If iOS and macOS needs ever diverge, we can change this to `s.ios.exclude_files` and `s.osx.exclude_files`.
@@ -73,6 +88,8 @@ Pod::Spec.new do |s|
 BASEPATH="${PWD}"
 echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   CMD
+
+  # TODO: study https://github.com/BrainiumLLC/cargo-mobile/blob/8a021a7d21315d0d4ad16d5d3c6526340e2fabb8/templates/platforms/xcode/project.yml.hbs
 
   script_build_phase = {
     :name => 'Build',
