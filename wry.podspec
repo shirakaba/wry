@@ -37,7 +37,8 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/tauri-apps/wry"
   s.license      = { :type => "Apache-2.0", :file => "LICENSE-APACHE" }
   # Of note, the last time I checked, the lowest version supported by React Native was iOS 10.0; and for macOS, it was 10.11.
-  s.platforms    = { :ios => "9.0", :osx => "10.11" }
+  s.ios.deployment_target = '9.0'
+  s.osx.deployment_target = '10.11'
   s.source       = { :git => "https://github.com/tauri-apps/wry.git", :tag => "wry-v#{s.version}" }
 
   # s.source_files = 'Classes/*.{cpp,h}', 'ios/*.{m,h}'
