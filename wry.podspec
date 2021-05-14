@@ -73,12 +73,30 @@ BASEPATH="${PWD}"
 echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
   CMD
 
+  script_build_phase = {
+    :name => 'Build',
+    :input_files => inputFiles,
+    # I'm still working out the proper escaping for this.
+    # When it goes really wrong, we get:
+    #  xcode-script -v --platform iOS Simulator --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk --configuration Debug  x86_64
+    # This interprets "Simulator" as a terminal arg. So at the very least, platform needs to be quoted.
+    # But we also don't want to quote FORCE_COLOR, as then it interprets "" as a terminal arg.
+    # Last hurdle: "i386" isn't a known arch.
+    :script => <<-CMD
+echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
+echo "Will run: \"${HOME}/.cargo/bin/cargo-apple\" xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}"
+
+cd "${SRCROOT}/.."
+
+"${HOME}/.cargo/bin/cargo-apple" xcode-script -v --platform "${PLATFORM_DISPLAY_NAME:?}" --sdk-root "${SDKROOT:?}" --configuration "${CONFIGURATION:?}" ${FORCE_COLOR} ${ARCHS:?}
+    CMD
+  }
+
   # For iOS, ARCHS returns "arm64 armv7". We want just "arm64" (because cargo-mobile doesn't support armv7 for iOS, and
   # maybe in a related fashion because it's the intersection between ARCHS and VALID_ARCHS).
   s.ios.script_phases = [
     {
-      :name => 'Build',
-      :input_files => inputFiles,
+      **script_build_phase,
       # If any output_files are missing, the script will be run again.
       # I'm not sure it's possible to support looking for only the active architecture in output_files, sadly; we'll have to look for both.
       #   https://github.com/Carthage/Carthage/commit/f622fafbec25ba3aaf7acbb1ddd1da2098cde8a6
@@ -90,41 +108,18 @@ echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
         '$(SRCROOT)/../../target/aarch64-apple-ios/$(CONFIGURATION)/libwry_ios.a',
         '$(SRCROOT)/../../target/x86_64-apple-ios/$(CONFIGURATION)/libwry_ios.a'
       ],
-      # I'm still working out the proper escaping for this.
-      # When it goes really wrong, we get:
-      #  xcode-script -v --platform iOS Simulator --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk --configuration Debug  x86_64
-      # This interprets "Simulator" as a terminal arg. So at the very least, platform needs to be quoted.
-      # But we also don't want to quote FORCE_COLOR, as then it interprets "" as a terminal arg.
-      # Last hurdle: "i386" isn't a known arch.
-      :script => <<-CMD
-echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
-echo "Will run: \"${HOME}/.cargo/bin/cargo-apple\" xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}"
-
-cd "${SRCROOT}/.."
-
-"${HOME}/.cargo/bin/cargo-apple" xcode-script -v --platform "${PLATFORM_DISPLAY_NAME:?}" --sdk-root "${SDKROOT:?}" --configuration "${CONFIGURATION:?}" ${FORCE_COLOR} ${ARCHS:?}
-      CMD
-    },
+    }
   ]
 
   # For macOS, ARCHS returns "arm64 x86_64". I haven't tried running this for macOS yet, so haven't seen whether this needs restricting.
   s.osx.script_phases = [
     {
-      :name => 'Build',
-      :input_files => inputFiles,
+      **script_build_phase,
       :output_files => [
         # /Users/jamie/Documents/git/wry-ios-poc-new/target/x86_64-apple-darwin/debug/libwry_ios.a
         '$(SRCROOT)/../../target/x86_64-apple-darwin/$(CONFIGURATION)/libwry_ios.a'
       ],
-      :script => <<-CMD
-echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
-echo "Will run: \"${HOME}/.cargo/bin/cargo-apple\" xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}"
-
-cd "${SRCROOT}/.."
-
-"${HOME}/.cargo/bin/cargo-apple" xcode-script -v --platform "${PLATFORM_DISPLAY_NAME:?}" --sdk-root "${SDKROOT:?}" --configuration "${CONFIGURATION:?}" ${FORCE_COLOR} ${ARCHS:?}
-      CMD
-    },
+    }
   ]
 
   s.info_plist = {
