@@ -54,7 +54,7 @@ Pod::Spec.new do |s|
 
   # This might be more of a tao concern, but we'll see.
   s.frameworks = 'WebKit'
-  s.source_files = ['src/**/*', *resourcesBesidesSrc]
+  s.resources = ['src/**/*', *resourcesBesidesSrc]
 
   # cargo-mobile doesn't distribute an i386 architecture, so here we prevent i386 being part of ARCHS for the `cargo-apple` command.
   # https://github.com/CocoaPods/CocoaPods/issues/10077
@@ -93,19 +93,16 @@ echo "This is the prepare_command for the wry pod. pwd: ${BASEPATH}"
 
   script_build_phase = {
     :name => 'Build',
-    # :input_files => inputFiles,
+    :input_files => inputFiles,
     # I'm still working out the proper escaping for this.
     # When it goes really wrong, we get:
     #  xcode-script -v --platform iOS Simulator --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk --configuration Debug  x86_64
     # This interprets "Simulator" as a terminal arg. So at the very least, platform needs to be quoted.
     # But we also don't want to quote FORCE_COLOR, as then it interprets "" as a terminal arg.
-    # ${DERIVED_FILE_DIR}: /Users/jamie/Library/Developer/Xcode/DerivedData/wry-ios-fcjgozzuzcgfyxfffiscczkzobog/Build/Intermediates.noindex/Pods.build/debug-iphonesimulator/wry-iOS.build/DerivedSources
-    # ${BUILT_PRODUCTS_DIR}: /Users/jamie/Library/Developer/Xcode/DerivedData/wry-ios-fcjgozzuzcgfyxfffiscczkzobog/Build/Products/debug-iphonesimulator/wry-iOS
-    # See: https://apple.stackexchange.com/questions/360653/how-to-configure-xcode-external-build-system-to-build-and-clean-using-standard-s
+    # Last hurdle: "i386" isn't a known arch.
     :script => <<-CMD
 echo "This is the build phase for the 'wry' pod. HOME: ${HOME}; SRCROOT: ${SRCROOT}; PWD: ${PWD}; ARCHS: ${ARCHS}; CONFIGURATION: ${CONFIGURATION:?}"
 echo "Will run: \"${HOME}/.cargo/bin/cargo-apple\" xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}"
-echo "BUILT_PRODUCTS_DIR: \"${BUILT_PRODUCTS_DIR}\""
 
 cd "${SRCROOT}/.."
 
